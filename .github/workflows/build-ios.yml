@@ -27,19 +27,42 @@ jobs:
         run: npm ci
 
       - name: Prebuild iOS project
-        run: npx expo prebuild --platform ios --clean
+        run: |
+          npx expo prebuild --platform ios --clean
 
-      - name: Inspect and Build iOS App
+      - name: Debug Environment and Project Structure
+        if: always()
+        run: |
+          echo "=== ROOT ===" > debug.txt
+          ls -la >> debug.txt
+          echo "=== IOS DIR ===" >> debug.txt
+          ls -la ios >> debug.txt 2>&1 || true
+          echo "=== POD INFO ===" >> debug.txt
+          which pod >> debug.txt 2>&1 || true
+          pod --version >> debug.txt 2>&1 || true
+          echo "=== XCODE SCHEMES ===" >> debug.txt
+          cd ios
+          if [ -d "pinder.xcworkspace" ]; then
+            xcodebuild -list -workspace pinder.xcworkspace >> ../debug.txt 2>&1 || true
+          else
+            echo "No pinder.xcworkspace found!" >> ../debug.txt
+            xcodebuild -list -project *.xcodeproj >> ../debug.txt 2>&1 || true
+          fi
+          cd ..
+
+      - name: Build iOS App
         run: |
           cd ios
-          ls -la
-          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
-          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 10 "Schemes:" | sed '1d' | head -n 1 | tr -d '[:space:]')
-          echo "Found workspace: $WORKSPACE"
-          echo "Found scheme: $SCHEME"
+          if [ -d "*.xcworkspace" ] || [ -d "pinder.xcworkspace" ]; then
+            TARGET_FLAG="-workspace pinder.xcworkspace"
+          else
+            PROJ=$(ls -d *.xcodeproj | head -n 1)
+            TARGET_FLAG="-project $PROJ"
+          fi
+          echo "Using target flag: $TARGET_FLAG"
           xcodebuild build \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
+            $TARGET_FLAG \
+            -scheme pinder \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath ../build/derivedData \
@@ -60,8 +83,11 @@ jobs:
           ls -lh pinder.ipa
 
       - name: Upload IPA Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pinder-altstore-ipa
-          path: build/pinder.ipa
+          name: pinder-build-results
+          path: |
+            build/pinder.ipa
+            debug.txt
           retention-days: 14
