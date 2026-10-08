@@ -1,4 +1,4 @@
-name: Deploy Web App to GitHub Pages
+name: Build and Deploy to GitHub Pages
 
 on:
   push:
@@ -8,19 +8,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: 'pages'
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -36,7 +27,7 @@ jobs:
         run: npm ci
 
       - name: Build web application
-        run: npx expo export -p web
+        run: npm run build:web
 
       - name: Disable Jekyll for GitHub Pages
         run: touch dist/.nojekyll
@@ -44,14 +35,10 @@ jobs:
       - name: Copy UI kit to dist
         run: cp ui-kit.html dist/ui-kit.html 2>/dev/null || true
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          keep_files: false
+          enable_jekyll: false
