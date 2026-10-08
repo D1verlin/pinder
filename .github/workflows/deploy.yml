@@ -38,6 +38,9 @@ jobs:
       - name: Build web application
         run: npx expo export -p web
 
+      - name: Disable Jekyll for GitHub Pages
+        run: touch dist/.nojekyll
+
       - name: Copy UI kit to dist
         run: cp ui-kit.html dist/ui-kit.html 2>/dev/null || true
 
