@@ -27,23 +27,15 @@ jobs:
         run: npm ci
 
       - name: Prebuild iOS project
-        run: |
-          npx expo prebuild --platform ios --clean
-          ls -la ios
+        run: npx expo prebuild --platform ios --clean
 
-      - name: Ensure CocoaPods Dependencies
+      - name: Configure Manual Code Signing
         run: |
-          if [ ! -d "ios/Pods" ] || [ ! -f "ios/pinder.xcworkspace/contents.xcworkspacedata" ]; then
-            echo "Running pod install..."
-            cd ios && pod install && cd ..
-          else
-            echo "Pods already installed by prebuild."
-          fi
-          ls -la ios
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/pinder.xcodeproj/project.pbxproj || true
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' ios/pinder.xcodeproj/project.pbxproj || true
 
       - name: Build iOS App (Unsigned for AltStore)
         run: |
-          set -o pipefail
           xcodebuild \
             -workspace ios/pinder.xcworkspace \
             -scheme pinder \
@@ -53,8 +45,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            build 2>&1 | tee xcodebuild.log || (echo "=== XCODEBUILD FAILED (LAST 80 LINES) ===" && tail -n 80 xcodebuild.log && exit 1)
+            build
 
       - name: Package IPA
         run: |
