@@ -27,10 +27,23 @@ jobs:
         run: npm ci
 
       - name: Prebuild iOS project
-        run: npx expo prebuild --platform ios --clean
+        run: |
+          npx expo prebuild --platform ios --clean
+          ls -la ios
+
+      - name: Ensure CocoaPods Dependencies
+        run: |
+          if [ ! -d "ios/Pods" ] || [ ! -f "ios/pinder.xcworkspace/contents.xcworkspacedata" ]; then
+            echo "Running pod install..."
+            cd ios && pod install && cd ..
+          else
+            echo "Pods already installed by prebuild."
+          fi
+          ls -la ios
 
       - name: Build iOS App (Unsigned for AltStore)
         run: |
+          set -o pipefail
           xcodebuild \
             -workspace ios/pinder.xcworkspace \
             -scheme pinder \
@@ -41,7 +54,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
-            build
+            build 2>&1 | tee xcodebuild.log || (echo "=== XCODEBUILD FAILED (LAST 80 LINES) ===" && tail -n 80 xcodebuild.log && exit 1)
 
       - name: Package IPA
         run: |
@@ -49,6 +62,7 @@ jobs:
           cp -r build/derivedData/Build/Products/Release-iphoneos/pinder.app build/Payload/
           cd build
           zip -r -y pinder.ipa Payload
+          ls -lh pinder.ipa
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
