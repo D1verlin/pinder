@@ -29,47 +29,23 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Configure CocoaPods and Disable Code Signing
+      - name: Configure Ad-Hoc Signing in Xcode Projects
         run: |
           python3 -c "
-          import glob
+          import glob, re
           for path in glob.glob('ios/**/*.pbxproj', recursive=True):
               with open(path, 'r') as f:
                   text = f.read()
               text = text.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
-              text = text.replace('CODE_SIGN_IDENTITY = \"Apple Development\";', 'CODE_SIGN_IDENTITY = \"\";')
-              text = text.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"\";')
+              text = re.sub(r'DEVELOPMENT_TEAM = [^;]+;', 'DEVELOPMENT_TEAM = \"\";', text)
+              text = re.sub(r'CODE_SIGN_IDENTITY = [^;]+;', 'CODE_SIGN_IDENTITY = \"-\";', text)
+              text = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]+;', 'PROVISIONING_PROFILE_SPECIFIER = \"\";', text)
               with open(path, 'w') as f:
                   f.write(text)
-              print(f'Successfully patched {path}')
+              print(f'Patched {path}')
           "
-          
-          # Patch Podfile to disable signing on all pod targets and resource bundles
-          python3 -c "
-          podfile = 'ios/Podfile'
-          with open(podfile, 'r') as f:
-              content = f.read()
-          hook = '''
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-                config.build_settings['CODE_SIGN_IDENTITY'] = ''
-                config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
-              end
-            end
-          end
-          '''
-          if 'post_install' not in content:
-              content += '\n' + hook
-              with open(podfile, 'w') as f:
-                  f.write(content)
-              print('Added post_install hook to Podfile')
-          "
-          cd ios && pod install && cd ..
 
-      - name: Build iOS App for Device
+      - name: Build iOS App for Physical Device
         run: |
           cd ios
           WORKSPACE=$(ls -d *.xcworkspace 2>/dev/null | head -n 1 || echo "")
@@ -81,22 +57,18 @@ jobs:
           fi
           echo "Building with target: $TARGET"
           
-          set -o pipefail
           xcodebuild build \
             $TARGET \
             -scheme pinder \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath ../build/derivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO \
-            PROVISIONING_PROFILE_SPECIFIER="" 2>&1 | tee ../xcode.log || {
-              ERRORS=$(grep -E "(error:|fatal error:|Signing for|No profile)" ../xcode.log | tail -n 8 | tr '\n' ' -- ')
-              echo "::error title=XcodeCompilationFailure::$ERRORS"
-              exit 1
-            }
+            CODE_SIGN_STYLE="Manual" \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            VALIDATE_PRODUCT=NO
           cd ..
 
       - name: Package IPA
