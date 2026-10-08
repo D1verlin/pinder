@@ -36,16 +36,18 @@ jobs:
 
       - name: Build iOS App (Unsigned for AltStore)
         run: |
+          cd ios
           xcodebuild \
-            -workspace ios/pinder.xcworkspace \
+            -workspace pinder.xcworkspace \
             -scheme pinder \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -derivedDataPath build/derivedData \
+            -derivedDataPath ../build/derivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             build
+          cd ..
 
       - name: Package IPA
         run: |
