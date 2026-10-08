@@ -118,6 +118,36 @@ pinder/
 - **Работа с клавиатурой**: применение `KeyboardAvoidingView` с правильными режимами сдвига и автоматическое закрытие клавиатуры при тапе в свободную область экрана.
 - **Типографика и платформенные стили**: Georgia на iOS и системный Serif на Android для логотипа и имен, четкий Sans для интерфейса; тени через `shadow*` на iOS и `elevation` на Android.
 
+## Установочные пакеты (APK и IPA)
+
+### 🤖 Android (.apk)
+- **Прямая ссылка на скачивание APK**: [Скачать pinder.apk (Expo CDN)](https://expo.dev/artifacts/eas/qZIIagXkKazTpnBZXSNJqLHcdQ5DgpGM6qwunrTAHXw.apk)
+- **Страница сборки EAS**: [EAS Build #65b16039](https://expo.dev/accounts/diverlin/projects/pinder/builds/65b16039-3f3a-437a-8960-3c2a6325b77a)
+- **Локальный файл**: `pinder.apk` в корне проекта (72.8 МБ).
+- **Инструкция по установке**:
+  1. Скачайте файл по ссылке на Android-устройство.
+  2. В настройках безопасности разрешите установку приложений из внешних источников для браузера/проводника.
+  3. Откройте скачанный `.apk` и нажмите **«Установить»**.
+
+---
+
+### 🍏 iOS (.ipa для AltStore / Sideloadly)
+- **Локальный файл IPA**: `pinder.ipa` в корне проекта (15.2 МБ) — готовый универсальный бандл для сайдлоадинга.
+- **Архив симулятора EAS (.app)**: [Скачать pinder-sim.tar.gz (Expo CDN)](https://expo.dev/artifacts/eas/fXyS4J9L6EINwDmOtd6sNLewKYDY5IWUCxDGK_-z1gc.tar.gz)
+- **Страница сборки EAS iOS**: [EAS Build #32feba84](https://expo.dev/accounts/diverlin/projects/pinder/builds/32feba84-caeb-46af-97ef-e5703f1f5d84)
+- **Инструкция по установке через AltStore**:
+  1. Убедитесь, что на компьютере (Windows/macOS) запущен **AltServer**, а iPhone подключен по USB или находится в одной Wi-Fi сети.
+  2. Откройте приложение **AltStore** на iPhone.
+  3. Перейдите во вкладку **«My Apps»** и нажмите **«+»** в верхнем углу.
+  4. Выберите файл `pinder.ipa` (передайте его на iPhone через AirDrop, iCloud Drive или Telegram).
+  5. AltServer автоматически подпишет пакет вашим бесплатным Apple ID и установит приложение Pinder на iPhone.
+- **Альтернативная установка через Sideloadly**:
+  1. Запустите Sideloadly на ПК и подключите iPhone по проводу.
+  2. Перетащите файл `pinder.ipa` в окно Sideloadly.
+  3. Укажите свой Apple ID и нажмите **Start**.
+
+---
+
 ## Запуск и разработка
 
 Установка зависимостей:
