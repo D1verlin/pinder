@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   centerContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#FAF7F5',
     alignItems: 'center',
     justifyContent: 'center',
