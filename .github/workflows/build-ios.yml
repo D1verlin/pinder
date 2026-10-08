@@ -67,14 +67,19 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO \
-            PROVISIONING_PROFILE_SPECIFIER="" 2>&1 | tee ../xcode.log || {
-              echo "## Xcode Build Failure Log" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              grep -E "(error:|fatal error:|Signing|Provisioning)" -B 2 -A 4 ../xcode.log | tail -n 50 >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              exit 1
-            }
+            PROVISIONING_PROFILE_SPECIFIER="" 2>&1 | tee ../xcode.log
           cd ..
+
+      - name: Save Error Log on Failure
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B debug-xcode
+          tail -n 150 xcode.log > XCODE_ERROR.txt || true
+          git add XCODE_ERROR.txt
+          git commit -m "debug: save xcode build failure log" || true
+          git push -f origin debug-xcode || true
 
       - name: Package IPA
         run: |
