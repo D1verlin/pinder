@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -29,17 +29,17 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Configure Manual Code Signing
-        run: |
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/pinder.xcodeproj/project.pbxproj || true
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' ios/pinder.xcodeproj/project.pbxproj || true
-
-      - name: Build iOS App (Unsigned for AltStore)
+      - name: Inspect and Build iOS App
         run: |
           cd ios
+          ls -la
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 10 "Schemes:" | sed '1d' | head -n 1 | tr -d '[:space:]')
+          echo "Found workspace: $WORKSPACE"
+          echo "Found scheme: $SCHEME"
           xcodebuild build \
-            -workspace pinder.xcworkspace \
-            -scheme pinder \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath ../build/derivedData \
@@ -52,7 +52,9 @@ jobs:
       - name: Package IPA
         run: |
           mkdir -p build/Payload
-          cp -r build/derivedData/Build/Products/Release-iphoneos/pinder.app build/Payload/
+          APP_DIR=$(find build/derivedData -name "*.app" -type d | grep "Release-iphoneos" | head -n 1)
+          echo "Found app bundle: $APP_DIR"
+          cp -r "$APP_DIR" build/Payload/
           cd build
           zip -r -y pinder.ipa Payload
           ls -lh pinder.ipa
