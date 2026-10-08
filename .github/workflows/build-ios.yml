@@ -27,41 +27,38 @@ jobs:
         run: npm ci
 
       - name: Prebuild iOS project
-        run: |
-          npx expo prebuild --platform ios --clean
+        run: npx expo prebuild --platform ios --clean
 
-      - name: Debug Environment and Project Structure
-        if: always()
+      - name: Disable Code Signing in Xcode Project
         run: |
-          echo "=== ROOT ===" > debug.txt
-          ls -la >> debug.txt
-          echo "=== IOS DIR ===" >> debug.txt
-          ls -la ios >> debug.txt 2>&1 || true
-          echo "=== POD INFO ===" >> debug.txt
-          which pod >> debug.txt 2>&1 || true
-          pod --version >> debug.txt 2>&1 || true
-          echo "=== XCODE SCHEMES ===" >> debug.txt
-          cd ios
-          if [ -d "pinder.xcworkspace" ]; then
-            xcodebuild -list -workspace pinder.xcworkspace >> ../debug.txt 2>&1 || true
-          else
-            echo "No pinder.xcworkspace found!" >> ../debug.txt
-            xcodebuild -list -project *.xcodeproj >> ../debug.txt 2>&1 || true
-          fi
-          cd ..
+          python3 -c "
+          import glob
+          for path in glob.glob('ios/**/*.pbxproj', recursive=True):
+              with open(path, 'r') as f:
+                  text = f.read()
+              text = text.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
+              text = text.replace('CODE_SIGN_IDENTITY = \"Apple Development\";', 'CODE_SIGN_IDENTITY = \"\";')
+              text = text.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"\";')
+              with open(path, 'w') as f:
+                  f.write(text)
+              print(f'Successfully patched {path}')
+          "
 
-      - name: Build iOS App
+      - name: Build iOS App for Device
         run: |
           cd ios
-          if [ -d "*.xcworkspace" ] || [ -d "pinder.xcworkspace" ]; then
-            TARGET_FLAG="-workspace pinder.xcworkspace"
+          WORKSPACE=$(ls -d *.xcworkspace 2>/dev/null | head -n 1 || echo "")
+          if [ -n "$WORKSPACE" ]; then
+            TARGET="-workspace $WORKSPACE"
           else
             PROJ=$(ls -d *.xcodeproj | head -n 1)
-            TARGET_FLAG="-project $PROJ"
+            TARGET="-project $PROJ"
           fi
-          echo "Using target flag: $TARGET_FLAG"
+          echo "Building with target: $TARGET"
+          
+          set -o pipefail
           xcodebuild build \
-            $TARGET_FLAG \
+            $TARGET \
             -scheme pinder \
             -configuration Release \
             -sdk iphoneos \
@@ -69,7 +66,14 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO \
+            PROVISIONING_PROFILE_SPECIFIER="" 2>&1 | tee ../xcode.log || {
+              echo "## Xcode Build Failure Log" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -E "(error:|fatal error:|Signing|Provisioning)" -B 2 -A 4 ../xcode.log | tail -n 50 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              exit 1
+            }
           cd ..
 
       - name: Package IPA
@@ -83,11 +87,8 @@ jobs:
           ls -lh pinder.ipa
 
       - name: Upload IPA Artifact
-        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pinder-build-results
-          path: |
-            build/pinder.ipa
-            debug.txt
+          name: pinder-altstore-ipa
+          path: build/pinder.ipa
           retention-days: 14
