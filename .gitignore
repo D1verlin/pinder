@@ -6,3 +6,9 @@ yarn-debug.*
 yarn-error.*
 .DS_Store
 *.log
+*.apk
+*.ipa
+*.tar.gz
+Payload/
+android/
+ios/
