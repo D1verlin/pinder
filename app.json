@@ -6,10 +6,25 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.diverlin.pinder",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.diverlin.pinder",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF7F5"
+      }
     },
     "experiments": {
       "baseUrl": "/pinder"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cc1b846f-80c4-4275-b7d6-9863b3de2d60"
+      }
+    },
+    "owner": "diverlin"
   }
 }
