@@ -106,6 +106,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   fullWidth: {
     width: '100%',

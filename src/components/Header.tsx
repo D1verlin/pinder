@@ -52,6 +52,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EFEAE4',
     ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      } as any,
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },

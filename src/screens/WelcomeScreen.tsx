@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  Dimensions,
+  useWindowDimensions,
   Image,
   TouchableOpacity,
   Platform,
@@ -13,8 +13,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../components/ui/Button';
 import { useApp } from '../context/AppContext';
 import { HeartFilledIcon, SparklesIcon } from '../components/Icons';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -41,6 +39,9 @@ const SLIDES = [
 ];
 
 export const WelcomeScreen: React.FC = () => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const cardHeight = Math.min(windowWidth * 0.95, windowHeight ? windowHeight * 0.48 : 420, 420);
+
   const { navigate, guestLogin } = useApp();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
@@ -62,7 +63,7 @@ export const WelcomeScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          style={styles.cardContainer}
+          style={[styles.cardContainer, { height: cardHeight }]}
           activeOpacity={0.9}
           onPress={handleNextSlide}
         >
@@ -166,7 +167,8 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     width: '100%',
-    height: SCREEN_WIDTH * 0.95,
+    maxWidth: 420,
+    alignSelf: 'center',
     borderRadius: 28,
     overflow: 'hidden',
     position: 'relative',

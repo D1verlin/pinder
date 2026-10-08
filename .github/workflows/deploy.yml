@@ -32,9 +32,6 @@ jobs:
       - name: Disable Jekyll for GitHub Pages
         run: touch dist/.nojekyll
 
-      - name: Copy UI kit to dist
-        run: cp ui-kit.html dist/ui-kit.html 2>/dev/null || true
-
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:

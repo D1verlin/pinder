@@ -6,7 +6,8 @@ import {
   StatusBar,
   Animated,
   PanResponder,
-  Dimensions,
+  useWindowDimensions,
+  Platform,
   Text,
   TouchableOpacity,
   Image,
@@ -22,10 +23,11 @@ import { FilterModal } from '../components/FilterModal';
 import { ScreenTransition } from '../components/ScreenTransition';
 import { useApp } from '../context/AppContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
-
 export const FeedScreen: React.FC = () => {
+  const { width: windowWidth } = useWindowDimensions();
+  const effectiveWidth = Math.min(windowWidth - 32, 420);
+  const swipeThreshold = 0.28 * effectiveWidth;
+
   const {
     activeTab,
     setActiveTab,
@@ -57,7 +59,7 @@ export const FeedScreen: React.FC = () => {
   }, [feedProfiles]);
 
   const rotate = position.x.interpolate({
-    inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
+    inputRange: [-effectiveWidth * 1.5, 0, effectiveWidth * 1.5],
     outputRange: ['-16deg', '0deg', '16deg'],
     extrapolate: 'clamp',
   });
@@ -67,25 +69,25 @@ export const FeedScreen: React.FC = () => {
   };
 
   const likeOpacity = position.x.interpolate({
-    inputRange: [15, SCREEN_WIDTH / 3],
+    inputRange: [15, effectiveWidth / 3],
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
 
   const nopeOpacity = position.x.interpolate({
-    inputRange: [-SCREEN_WIDTH / 3, -15],
+    inputRange: [-effectiveWidth / 3, -15],
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
 
   const nextCardScale = position.x.interpolate({
-    inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+    inputRange: [-effectiveWidth / 2, 0, effectiveWidth / 2],
     outputRange: [1, 0.96, 1],
     extrapolate: 'clamp',
   });
 
   const nextCardOpacity = position.x.interpolate({
-    inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+    inputRange: [-effectiveWidth / 2, 0, effectiveWidth / 2],
     outputRange: [1, 0.75, 1],
     extrapolate: 'clamp',
   });
@@ -101,11 +103,11 @@ export const FeedScreen: React.FC = () => {
 
     const toX =
       direction === 'right'
-        ? SCREEN_WIDTH * 1.5
+        ? effectiveWidth * 1.5
         : direction === 'left'
-        ? -SCREEN_WIDTH * 1.5
+        ? -effectiveWidth * 1.5
         : 0;
-    const toY = direction === 'up' ? -SCREEN_WIDTH * 1.6 : 0;
+    const toY = direction === 'up' ? -effectiveWidth * 1.6 : 0;
 
     Animated.timing(position, {
       toValue: { x: toX, y: toY },
@@ -113,6 +115,24 @@ export const FeedScreen: React.FC = () => {
       useNativeDriver: false,
     }).start(() => onSwipeComplete(direction));
   };
+
+  // Keyboard hotkeys for desktop web (ArrowLeft = nope, ArrowRight = like, ArrowUp = superlike)
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && activeTab === 'feed') {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (filterModalVisible || Boolean(matchedProfile)) return;
+        if (e.key === 'ArrowLeft') {
+          forceSwipe('left');
+        } else if (e.key === 'ArrowRight') {
+          forceSwipe('right');
+        } else if (e.key === 'ArrowUp') {
+          forceSwipe('up');
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [activeTab, currentProfile, filterModalVisible, matchedProfile, effectiveWidth]);
 
   const onSwipeComplete = (direction: 'right' | 'left' | 'up') => {
     const profile = feedProfiles[currentCardIndex];
@@ -138,11 +158,11 @@ export const FeedScreen: React.FC = () => {
         position.setValue({ x: gestureState.dx, y: clampedY });
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx > SWIPE_THRESHOLD) {
+        if (gestureState.dx > swipeThreshold) {
           forceSwipe('right');
-        } else if (gestureState.dx < -SWIPE_THRESHOLD) {
+        } else if (gestureState.dx < -swipeThreshold) {
           forceSwipe('left');
-        } else if (gestureState.dy < -SWIPE_THRESHOLD) {
+        } else if (gestureState.dy < -swipeThreshold) {
           forceSwipe('up');
         } else {
           resetPosition();

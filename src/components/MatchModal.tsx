@@ -14,8 +14,6 @@ import { Profile, User } from '../types/profile';
 import { Button } from './ui/Button';
 import { HeartFilledIcon, SparklesIcon } from './Icons';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 interface MatchModalProps {
   visible: boolean;
   onClose: () => void;
@@ -168,7 +166,9 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     width: '100%',
+    maxWidth: 420,
     alignItems: 'center',
+    alignSelf: 'center',
   },
   badgeRow: {
     flexDirection: 'row',
@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
     height: 180,
   },
   photoCard: {
-    width: SCREEN_WIDTH * 0.36,
-    height: SCREEN_WIDTH * 0.46,
+    width: 135,
+    height: 175,
     borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 3,

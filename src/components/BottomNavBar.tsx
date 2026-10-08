@@ -151,6 +151,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 6,
     borderRadius: 20,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   iconWithBadge: {
     position: 'relative',

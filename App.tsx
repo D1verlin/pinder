@@ -52,6 +52,20 @@ const RootNavigator: React.FC<RootNavigatorProps> = ({ onSwitchToWebView }) => {
   );
 };
 
+const ResponsiveWebWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  if (Platform.OS !== 'web') {
+    return <>{children}</>;
+  }
+
+  return (
+    <View style={styles.webCanvas}>
+      <View style={styles.webShell}>
+        {children}
+      </View>
+    </View>
+  );
+};
+
 export default function App() {
   // On mobile (Expo Go), default to WebView wrapping the published web app.
   // On web platform (GitHub Pages build), render the native web app screens directly.
@@ -64,13 +78,36 @@ export default function App() {
   }
 
   return (
-    <AppProvider>
-      <RootNavigator onSwitchToWebView={() => setMode('webview')} />
-    </AppProvider>
+    <ResponsiveWebWrapper>
+      <AppProvider>
+        <RootNavigator onSwitchToWebView={() => setMode('webview')} />
+      </AppProvider>
+    </ResponsiveWebWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  webCanvas: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#ECE5DE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  webShell: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 480,
+    height: '100%',
+    backgroundColor: '#FAF7F5',
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
+  },
   floatingWebViewBtn: {
     position: 'absolute',
     top: 50,

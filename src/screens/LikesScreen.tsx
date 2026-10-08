@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  Dimensions,
+  useWindowDimensions,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,10 +23,11 @@ import {
 } from '../components/Icons';
 import { LikeItem, Profile } from '../types/profile';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
-
 export const LikesScreen: React.FC = () => {
+  const { width: windowWidth } = useWindowDimensions();
+  const effectiveContainerWidth = Math.min(windowWidth, 480);
+  const cardWidth = (effectiveContainerWidth - 48) / 2;
+
   const { likesList, handleLikeBack, handleSkipLike, openChat, chats, setActiveTab } =
     useApp();
 
@@ -65,7 +66,7 @@ export const LikesScreen: React.FC = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { width: cardWidth, height: cardWidth * 1.45 }]}
         activeOpacity={0.88}
         onPress={() => setSelectedProfile(profile)}
       >
@@ -271,8 +272,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH * 1.45,
     borderRadius: 22,
     overflow: 'hidden',
     position: 'relative',

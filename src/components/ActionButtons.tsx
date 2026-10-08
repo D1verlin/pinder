@@ -88,6 +88,11 @@ const styles = StyleSheet.create({
   baseButton: {
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   secondaryButton: {
     width: 58,

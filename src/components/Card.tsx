@@ -4,14 +4,12 @@ import {
   Text,
   Image,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
   Platform,
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Profile } from '../types/profile';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface CardProps {
   profile: Profile;
@@ -20,8 +18,12 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ profile, likeOpacity, nopeOpacity }) => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const cardWidth = Math.min(windowWidth - 32, 420);
+  const maxCardHeight = windowHeight ? Math.min(windowHeight * 0.62, 580) : 580;
+
   return (
-    <View style={styles.cardContainer}>
+    <View style={[styles.cardContainer, { width: cardWidth, maxHeight: maxCardHeight }]}>
       <View style={styles.cardInner}>
         <Image
           source={{ uri: profile.imageUrl }}
@@ -69,11 +71,16 @@ export const Card: React.FC<CardProps> = ({ profile, likeOpacity, nopeOpacity })
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: SCREEN_WIDTH - 32,
+    width: '100%',
+    maxWidth: 420,
     aspectRatio: 0.72,
     alignSelf: 'center',
     borderRadius: 28,
     ...Platform.select({
+      web: {
+        cursor: 'grab',
+        userSelect: 'none',
+      } as any,
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 16 },
