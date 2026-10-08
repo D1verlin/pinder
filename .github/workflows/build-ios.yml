@@ -29,24 +29,19 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Install CocoaPods
-        run: |
-          cd ios
-          pod install
-          cd ..
-
       - name: Build iOS App (Unsigned for AltStore)
         run: |
-          xcodebuild build \
+          xcodebuild \
             -workspace ios/pinder.xcworkspace \
             -scheme pinder \
             -configuration Release \
-            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath build/derivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            build
 
       - name: Package IPA
         run: |
